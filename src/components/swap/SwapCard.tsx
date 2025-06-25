@@ -5,7 +5,7 @@ import AmountInput from './AmountInput';
 import Button from '../ui/Button';
 import BalanceDisplay from '../ui/BalanceDisplay';
 import { ethers } from 'ethers';
-import { Bridge__factory, USDT_BSC_CONTRACT } from '@oraichain/oraidex-common';
+import { Bridge__factory, USDT_BSC_CONTRACT, toAmount as toAmountCommon } from '@oraichain/oraidex-common';
 import { getTokenById } from '../../constants/networks';
 
 interface SwapCardProps {
@@ -39,21 +39,35 @@ const SwapCard: React.FC<SwapCardProps> = ({
 
   const handleSwap = async () => {
     // TODO: Implement actual swap logic
-    console.log('Swap executed:', { fromToken, toToken, fromAmount, toAmount });
-    const initSigner =  new ethers.providers.Web3Provider(window.ethereum as any, 'any');
-    const signer = await initSigner.getSigner();
-    const contractAddress = ''
-    const gravityContract = Bridge__factory.connect(contractAddress as string, signer);
-    const token = {
-      contractAddress: USDT_BSC_CONTRACT,
-    }
-    const to = 'channel-1/exa15lvhklny0khnwy7hgrxsxut6t6ku2cgkhdcgpq';
-    const amountVal = ethers.utils.parseEther(fromAmount);
-    const from = await signer.getAddress();
 
-    const result = await gravityContract.sendToCosmos(token.contractAddress, to, amountVal, { from });
-    const res = await result.wait();
-    console.log({res});
+    try {
+      console.log('Swap executed:', { fromToken, toToken, fromAmount, toAmount });
+      const walletProvider = new ethers.providers.Web3Provider(window.ethereum as any, 'any');
+      const signer = await walletProvider.getSigner();
+
+      const contractAddress = '0x9a0A02B296240D2620E339cCDE386Ff612f07Be5'
+      const gravityContract = Bridge__factory.connect(contractAddress as string, signer);
+      const token = {
+        contractAddress: USDT_BSC_CONTRACT,
+      }
+      const to = 'channel-1/orai1hvr9d72r5um9lvt0rpkd4r75vrsqtw6yujhqs2';
+      const amountVal = toAmountCommon(fromAmount, 18);
+      const from = await signer.getAddress();
+      console.log({
+        contractAddress,
+        gravityContract,
+        token,
+        to,
+        amountVal,
+        from,
+      });
+
+      const result = await gravityContract.sendToCosmos(token.contractAddress, to, amountVal, { from });
+      const res = await result.wait();
+      console.log({ res });
+    } catch (error) {
+      console.log({ error });
+    }
   };
 
   return (
@@ -115,7 +129,7 @@ const SwapCard: React.FC<SwapCardProps> = ({
           <div className="flex-1">
             <AmountInput
               value={toAmount}
-              onChange={() => {}} // Read-only
+              onChange={() => { }} // Read-only
               placeholder="0.00"
               readOnly
             />
@@ -149,7 +163,7 @@ const SwapCard: React.FC<SwapCardProps> = ({
         <div className="flex justify-between text-sm">
           <span className="text-gray-600 dark:text-gray-400">{t('swap.price')}</span>
           <span className="text-gray-900 dark:text-gray-100">
-            1 {fromTokenInfo?.symbol || fromToken} = {fromToken === toToken  ? 1 : '0'} {toTokenInfo?.symbol || toToken}
+            1 {fromTokenInfo?.symbol || fromToken} = {fromToken === toToken ? 1 : '0'} {toTokenInfo?.symbol || toToken}
           </span>
         </div>
         <div className="flex justify-between text-sm mt-1">
