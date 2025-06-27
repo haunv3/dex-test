@@ -1,3 +1,5 @@
+import { OraidexCommon } from "@oraichain/oraidex-common";
+
 export interface Network {
   id: string;
   name: string;
@@ -10,6 +12,7 @@ export interface Network {
     decimals: number;
   };
   icon: string;
+  isEvm?: boolean;
 }
 
 export interface Token {
@@ -23,34 +26,54 @@ export interface Token {
   price?: number;
 }
 
+let oraidexCommonOg = await OraidexCommon.load();
+while (!oraidexCommonOg) {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  oraidexCommonOg = await OraidexCommon.load();
+}
+
 // Supported Networks
 export const SUPPORTED_NETWORKS: Network[] = [
-  {
-    id: 'bsc',
-    name: 'BNB Smart Chain',
-    chainId: '0x38', // 56 in decimal
-    rpcUrl: 'https://bsc-dataseed1.binance.org/',
-    explorerUrl: 'https://bscscan.com',
-    nativeCurrency: {
-      name: 'BNB',
-      symbol: 'BNB',
-      decimals: 18,
-    },
-    icon: '🟡',
-  },
-  {
-    id: 'ethereum',
-    name: 'Ethereum',
-    chainId: '0x01', // 1 in decimal - correct format
-    rpcUrl: 'https://eth.llamarpc.com',
-    explorerUrl: 'https://etherscan.io',
-    nativeCurrency: {
-      name: 'Ethereum',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    icon: '🔷',
-  },
+  // {
+  //   id: 'bsc',
+  //   name: 'BNB Smart Chain',
+  //   chainId: '0x38', // 56 in decimal
+  //   rpcUrl: 'https://bsc-dataseed1.binance.org/',
+  //   explorerUrl: 'https://bscscan.com',
+  //   nativeCurrency: {
+  //     name: 'BNB',
+  //     symbol: 'BNB',
+  //     decimals: 18,
+  //   },
+  //   icon: '🟡',
+  //   isEvm: true,
+  // },
+  // {
+  //   id: 'ethereum',
+  //   name: 'Ethereum',
+  //   chainId: '0x01', // 1 in decimal - correct format
+  //   rpcUrl: 'https://eth.llamarpc.com',
+  //   explorerUrl: 'https://etherscan.io',
+  //   nativeCurrency: {
+  //     name: 'Ethereum',
+  //     symbol: 'ETH',
+  //     decimals: 18,
+  //   },
+  //   icon: '🔷',
+  // },
+  // {
+  //   id: 'exachain',
+  //   name: 'ExaChain',
+  //   chainId: '6789', // 1 in decimal - correct format
+  //   rpcUrl: 'https://exa-evm.orai.network',
+  //   explorerUrl: 'https://exa-explorer.orai.network',
+  //   nativeCurrency: {
+  //     name: 'ExaChain',
+  //     symbol: 'EXA',
+  //     decimals: 18,
+  //   },
+  //   icon: '🔷',
+  // },
 ];
 
 // Supported Tokens
@@ -77,6 +100,7 @@ export const SUPPORTED_TOKENS: Token[] = [
     icon: '💵',
     price: 1.00,
   },
+
 ];
 
 // ERC20 ABI for balanceOf function

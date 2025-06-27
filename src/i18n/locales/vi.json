@@ -6,6 +6,7 @@
   "nav": {
     "home": "Trang chủ",
     "components": "Components",
+    "multiWallet": "Đa Ví",
     "notifications": "Thông báo",
     "swap": "Swap"
   },
@@ -29,6 +30,9 @@
   },
   "wallet": {
     "connectWallet": "Kết nối ví",
+    "connectWallets": "Kết nối ví",
+    "connectedWallets": "Ví đã kết nối",
+    "connectMultipleWallets": "Kết nối nhiều ví và xem tất cả địa chỉ cùng lúc",
     "chooseWallet": "Chọn ví của bạn",
     "securityNote": "Lưu ý bảo mật",
     "securityDescription": "Không bao giờ chia sẻ private key hoặc seed phrase với bất kỳ ai. Chỉ kết nối với các ứng dụng đáng tin cậy.",

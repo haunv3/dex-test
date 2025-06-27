@@ -5,7 +5,7 @@ import Modal from '../ui/Modal';
 interface WalletConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConnect: (walletType: 'metamask' | 'owallet') => void;
+  onConnect: (walletType: 'metamask' | 'owallet' | 'keplr') => void;
 }
 
 const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
@@ -38,8 +38,9 @@ const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
       // Check if OWallet is installed
       if (typeof window.owallet !== 'undefined') {
         // Request account access
-        const accounts = await window.owallet.request({ method: 'eth_requestAccounts' });
-        console.log('OWallet connected:', accounts[0]);
+        // @ts-ignore
+        const {bech32Address} = await window.owallet.getKey('Oraichain');
+        console.log('OWallet connected:', bech32Address);
         onConnect('owallet');
         onClose();
       } else {

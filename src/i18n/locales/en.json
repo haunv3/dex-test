@@ -6,6 +6,7 @@
   "nav": {
     "home": "Home",
     "components": "Components",
+    "multiWallet": "Multi-Wallet",
     "notifications": "Notifications",
     "swap": "Swap"
   },
@@ -14,21 +15,24 @@
     "portfolio": "Portfolio"
   },
   "swap": {
-    "title": "Swap",
+    "title": "Bridge",
     "from": "From",
     "to": "To",
     "balance": "Balance",
     "enterAmount": "Enter an amount",
-    "swapTokens": "Swap {{fromAmount}} {{fromToken}} for {{toAmount}} {{toToken}}",
+    "swapTokens": "Bridge {{fromAmount}} {{fromToken}} for {{toAmount}} {{toToken}}",
     "price": "Price",
     "slippageTolerance": "Slippage Tolerance",
     "connectWallet": "Connect Wallet",
     "searchTokens": "Search tokens...",
-    "swap": "Swap",
+    "swap": "Bridge",
     "liquidity": "Liquidity"
   },
   "wallet": {
     "connectWallet": "Connect Wallet",
+    "connectWallets": "Connect Wallets",
+    "connectedWallets": "Connected Wallets",
+    "connectMultipleWallets": "Connect multiple wallets and view all addresses simultaneously",
     "chooseWallet": "Choose your wallet",
     "securityNote": "Security Note",
     "securityDescription": "Never share your private keys or seed phrase with anyone. Only connect to trusted applications.",

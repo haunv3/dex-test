@@ -42,7 +42,7 @@ Hệ thống query balance đã được cải thiện để hỗ trợ việc l
 ```typescript
 // Các mạng được hỗ trợ
 - BNB Smart Chain (BSC) - Chain ID: 0x38
-- Ethereum - Chain ID: 0x1
+- Ethereum - Chain ID: 0x01
 - Polygon - Chain ID: 0x89
 
 // Các token được hỗ trợ

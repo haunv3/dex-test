@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import SwapCard from '../components/swap/SwapCard';
 import SwapHeader from '../components/swap/SwapHeader';
 
 const Swap: React.FC = () => {
-  const [fromToken, setFromToken] = useState('usdt-bsc');
-  const [toToken, setToToken] = useState('ethereum-usdt');
+  const [fromToken, setFromToken] = useState('');
+  const [toToken, setToToken] = useState('');
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
 

@@ -12,6 +12,7 @@ const Navigation: React.FC = () => {
   const navItems = [
     { path: '/', label: t('nav.home'), icon: '🏠' },
     { path: '/components', label: t('nav.components'), icon: '🧩' },
+    { path: '/multi-wallet', label: t('nav.multiWallet'), icon: '🔗' },
   ];
 
   const languages = [

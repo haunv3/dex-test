@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useBalance } from '../../hooks/useBalance';
+import { useMultiWalletBalance } from '../../hooks/useMultiWalletBalance';
 import { balanceService } from '../../services/balanceService';
+import { useWallet } from '../../hooks/useWallet';
 import type { Network } from '../../constants/networks';
 
 interface WalletAssetsModalProps {
@@ -20,15 +21,54 @@ const WalletAssetsModal: React.FC<WalletAssetsModalProps> = ({
   onDisconnect,
 }) => {
   const { t } = useTranslation();
-  const { balances, totalValueFormatted, isLoading, error, refreshBalances } = useBalance();
-  console.log({balances});
+  const {
+    evmBalances,
+    cosmosBalances,
+    totalValueFormatted,
+    isLoading,
+    error,
+    refreshBalances,
+    walletCounts
+  } = useMultiWalletBalance();
+  const { connections, getAllAddresses, disconnectConnection } = useWallet();
+
+  // Combine all balances for display
+  const allBalances = [...evmBalances, ...cosmosBalances];
+
+  console.log('Multi-wallet balances:', { evmBalances, cosmosBalances, walletCounts });
 
   const handleDisconnect = () => {
     onDisconnect();
   };
 
+  const handleDisconnectSpecific = (type: 'evm' | 'cosmos', walletType: string) => {
+    disconnectConnection(type, walletType);
+  };
+
   const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    return `${address?.slice(0, 6)}...${address?.slice(-4)}`;
+  };
+
+  const getWalletIcon = (walletType: string) => {
+    switch (walletType) {
+      case 'metamask':
+        return '🦊';
+      case 'owallet':
+        return '🔵';
+      default:
+        return '💳';
+    }
+  };
+
+  const getWalletName = (walletType: string) => {
+    switch (walletType) {
+      case 'metamask':
+        return 'MetaMask';
+      case 'owallet':
+        return 'OWallet';
+      default:
+        return 'Wallet';
+    }
   };
 
   const handleSwitchNetwork = async (network: Network) => {
@@ -49,6 +89,8 @@ const WalletAssetsModal: React.FC<WalletAssetsModalProps> = ({
 
   if (!isOpen) return null;
 
+  const allAddresses = getAllAddresses();
+
   return (
     <>
       {/* Backdrop */}
@@ -63,17 +105,15 @@ const WalletAssetsModal: React.FC<WalletAssetsModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3">
-              <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${
-                walletType === 'metamask' ? 'from-orange-400 to-orange-600' : 'from-blue-400 to-blue-600'
-              } flex items-center justify-center text-white text-sm font-bold`}>
-                {walletType === 'metamask' ? '🦊' : '🔵'}
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center text-white text-sm font-bold">
+                🔗
               </div>
               <div>
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-                  {walletType === 'metamask' ? 'MetaMask' : 'OWallet'}
+                  Multi-Wallet
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {formatAddress(walletAddress)}
+                  {connections.length} wallet{connections.length !== 1 ? 's' : ''} connected
                 </p>
               </div>
             </div>
@@ -85,6 +125,44 @@ const WalletAssetsModal: React.FC<WalletAssetsModalProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+          </div>
+
+          {/* Connected Wallets Summary */}
+          <div className="p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Connected Wallets
+            </h3>
+            <div className="space-y-2">
+              {/* EVM Wallets */}
+              {allAddresses.evm.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">🔷</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      EVM: {allAddresses.evm.length} wallet{allAddresses.evm.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {walletCounts.evm} networks
+                  </span>
+                </div>
+              )}
+
+              {/* Cosmos Wallets */}
+              {allAddresses.cosmos.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">🔶</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Cosmos: {allAddresses.cosmos.length} wallet{allAddresses.cosmos.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {walletCounts.cosmos} networks
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Total Value */}
@@ -126,19 +204,19 @@ const WalletAssetsModal: React.FC<WalletAssetsModalProps> = ({
               </button>
             </div>
 
-            {isLoading && balances.length === 0 ? (
+            {isLoading && allBalances.length === 0 ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-gray-500">Loading assets...</p>
               </div>
-            ) : balances.length === 0 ? (
+            ) : allBalances.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">No assets found</p>
                 <p className="text-sm text-gray-400 mt-1">Connect to supported networks to see your assets</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {balances.map((networkBalance) => (
+                {allBalances.map((networkBalance) => (
                   <div key={networkBalance.network.id} className="space-y-3">
                     {/* Network Header */}
                     <div className="flex items-center justify-between">
@@ -146,6 +224,9 @@ const WalletAssetsModal: React.FC<WalletAssetsModalProps> = ({
                         <span className="text-lg">{networkBalance.network.icon}</span>
                         <span className="font-medium text-gray-900 dark:text-gray-100">
                           {networkBalance.network.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({networkBalance.network.isEvm ? 'EVM' : 'Cosmos'})
                         </span>
                       </div>
                       <button
@@ -204,7 +285,7 @@ const WalletAssetsModal: React.FC<WalletAssetsModalProps> = ({
                             {tokenBalance.valueFormatted}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {parseFloat(tokenBalance.balanceFormatted).toFixed(4)} {tokenBalance.token.symbol}
+                            {parseFloat(tokenBalance.balanceFormatted).toFixed(6)} {tokenBalance.token.symbol}
                           </p>
                         </div>
                       </div>
@@ -217,12 +298,37 @@ const WalletAssetsModal: React.FC<WalletAssetsModalProps> = ({
 
           {/* Footer */}
           <div className="p-6 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={handleDisconnect}
-              className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
-            >
-              {t('wallet.disconnect')}
-            </button>
+            <div className="space-y-3">
+              {/* Disconnect All Button */}
+              <button
+                onClick={handleDisconnect}
+                className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Disconnect All Wallets
+              </button>
+
+              {/* Individual Disconnect Buttons */}
+              {connections.length > 1 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    Or disconnect individual wallets:
+                  </p>
+                  {connections.map((conn, index) => (
+                    <button
+                      key={`${conn.type}-${conn.walletType}-${index}`}
+                      onClick={() => handleDisconnectSpecific(conn.type, conn.walletType)}
+                      className="w-full px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-sm transition-colors flex items-center justify-between"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <span>{getWalletIcon(conn.walletType)}</span>
+                        <span>{getWalletName(conn.walletType)} ({conn.type})</span>
+                      </span>
+                      <span className="text-xs">{formatAddress(conn.address)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

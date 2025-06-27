@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SUPPORTED_TOKENS, getTokensByNetwork, getNetworkByChainId } from '../../constants/networks';
-import { useWallet } from '../../hooks/useWallet';
+import type { TokenItemType } from '@oraichain/oraidex-common';
 
 interface TokenSelectorProps {
-  selectedToken: string; // This should be token.id now, not token.symbol
-  onTokenSelect: (tokenId: string) => void;
+  selectedToken: string;
+  onTokenSelect: (tokenDenom: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  tokens: TokenItemType[];
+  placeholder?: string;
 }
 
 const TokenSelector: React.FC<TokenSelectorProps> = ({
@@ -15,44 +16,25 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
   onTokenSelect,
   isOpen,
   onToggle,
+  tokens,
+  placeholder = 'Select a token',
 }) => {
   const { t } = useTranslation();
-  const { network } = useWallet();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Get tokens for current network, or all tokens if no network
-  const availableTokens = network ? getTokensByNetwork(network) : SUPPORTED_TOKENS;
-  const selectedTokenData = availableTokens.find(token => token.id === selectedToken);
+  const selectedTokenData = tokens.find(token => token.denom === selectedToken);
 
   // Filter tokens based on search term
-  const filteredTokens = availableTokens.filter(token => {
-    const networkInfo = getNetworkByChainId(token.networkId);
+  const filteredTokens = tokens.filter(token => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      token.symbol.toLowerCase().includes(searchLower) ||
-      token.name.toLowerCase().includes(searchLower) ||
-      (networkInfo?.name.toLowerCase().includes(searchLower))
+      token.name?.toLowerCase().includes(searchLower) ||
+      token.denom?.toLowerCase().includes(searchLower)
     );
   });
 
-  const getTokenDisplayName = (token: any) => {
-    const networkInfo = getNetworkByChainId(token.networkId);
-    if (networkInfo) {
-      return `${token.symbol} (${networkInfo.name})`;
-    }
-    return token.symbol;
-  };
-
-  const getTokenDisplayNameShort = (token: any) => {
-    const networkInfo = getNetworkByChainId(token.networkId);
-    if (networkInfo) {
-      // Use short network name
-      const shortNetworkName = networkInfo.name === 'Ethereum' ? 'ETH' :
-                              networkInfo.name === 'BNB Smart Chain' ? 'BSC' :
-                              networkInfo.name;
-      return `${token.symbol} (${shortNetworkName})`;
-    }
-    return token.symbol;
+  const getTokenDisplayNameShort = (token: TokenItemType) => {
+    return token.name || token.denom;
   };
 
   return (
@@ -61,9 +43,8 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
         onClick={onToggle}
         className="flex items-center space-x-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors"
       >
-        <span className="text-lg">{selectedTokenData?.icon || '🪙'}</span>
         <span className="font-medium text-gray-900 dark:text-gray-100">
-          {selectedTokenData ? getTokenDisplayNameShort(selectedTokenData) : selectedToken}
+          {selectedTokenData ? getTokenDisplayNameShort(selectedTokenData) + ' - ' + selectedTokenData.org : placeholder}
         </span>
         <svg
           className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -80,7 +61,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
           <div className="p-2">
             <input
               type="text"
-              placeholder={t('swap.searchTokens')}
+              placeholder={t('swap.searchTokens') || 'Search tokens...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
@@ -94,28 +75,27 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
               </div>
             ) : (
               filteredTokens.map((token) => {
-                const networkInfo = getNetworkByChainId(token.networkId);
                 return (
                   <button
-                    key={token.id}
+                    key={token.denom}
                     onClick={() => {
-                      onTokenSelect(token.id);
+                      onTokenSelect(token.denom);
                       onToggle();
                     }}
                     className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors ${
-                      selectedToken === token.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      selectedToken === token.denom ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                     }`}
                   >
-                    <span className="text-lg">{token.icon}</span>
+                    {/* <span className="text-lg">{token.icon || '🪙'}</span> */}
                     <div className="flex-1 text-left">
                       <div className="font-medium text-gray-900 dark:text-gray-100">
-                        {token.symbol}
+                        {token.name || token.denom}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {token.name} • {networkInfo?.name || 'Unknown Network'}
+                        {token.org} {token.isVerified && '• ✅ Verified'}
                       </div>
                     </div>
-                    {selectedToken === token.id && (
+                    {selectedToken === token.denom && (
                       <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>

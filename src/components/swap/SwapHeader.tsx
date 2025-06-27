@@ -3,16 +3,21 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../store';
 import { useWallet } from '../../hooks/useWallet';
 import Button from '../ui/Button';
-import WalletConnectModal from './WalletConnectModal';
+import MultiWalletDisplay from '../ui/MultiWalletDisplay';
 import WalletAssetsModal from './WalletAssetsModal';
 import i18n from '../../i18n';
 
 const SwapHeader: React.FC = () => {
   const { t } = useTranslation();
   const { theme, toggleTheme, language, setLanguage } = useAppStore();
-  const { isConnected, walletType, address, connectWallet, disconnectWallet } = useWallet();
+  const {
+    isConnected,
+    connections,
+    getAllAddresses,
+    disconnectWallet
+  } = useWallet();
 
-  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showMultiWalletModal, setShowMultiWalletModal] = useState(false);
   const [showAssetsModal, setShowAssetsModal] = useState(false);
 
   const handleLanguageChange = () => {
@@ -25,17 +30,7 @@ const SwapHeader: React.FC = () => {
     if (isConnected) {
       setShowAssetsModal(true);
     } else {
-      setShowConnectModal(true);
-    }
-  };
-
-  const handleWalletConnect = async (walletType: 'metamask' | 'owallet') => {
-    try {
-      await connectWallet(walletType);
-      setShowConnectModal(false);
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      // You could show a toast notification here
+      setShowMultiWalletModal(true);
     }
   };
 
@@ -45,8 +40,24 @@ const SwapHeader: React.FC = () => {
   };
 
   const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    return `${address?.slice(0, 6)}...${address?.slice(-4)}`;
   };
+
+  const getWalletIcon = (walletType: string) => {
+    switch (walletType) {
+      case 'metamask':
+        return '🦊';
+      case 'owallet':
+        return '🔵';
+      default:
+        return '💳';
+    }
+  };
+
+  const allAddresses = getAllAddresses();
+  const totalConnections = connections.length;
+  const primaryAddress = connections.length > 0 ? connections[0].address : null;
+  const primaryWalletType = connections.length > 0 ? connections[0].walletType : null;
 
   return (
     <>
@@ -98,7 +109,7 @@ const SwapHeader: React.FC = () => {
                 {theme.mode === 'light' ? '🌙' : '☀️'}
               </Button>
 
-              {/* Connect Wallet */}
+              {/* Multi-Wallet Connect Button */}
               <Button
                 variant="primary"
                 size="sm"
@@ -111,10 +122,23 @@ const SwapHeader: React.FC = () => {
               >
                 {isConnected ? (
                   <div className="flex items-center space-x-2">
-                    <span className={`w-2 h-2 rounded-full ${
-                      walletType === 'metamask' ? 'bg-orange-400' : 'bg-blue-400'
-                    }`} />
-                    <span>{formatAddress(address!)}</span>
+                    {/* Show multiple wallet indicators */}
+                    <div className="flex items-center space-x-1">
+                      {connections.slice(0, 2).map((conn, index) => (
+                        <span key={index} className="text-xs">
+                          {getWalletIcon(conn.walletType)}
+                        </span>
+                      ))}
+                      {connections.length > 2 && (
+                        <span className="text-xs">+{connections.length - 2}</span>
+                      )}
+                    </div>
+                    <span>{formatAddress(primaryAddress!)}</span>
+                    {totalConnections > 1 && (
+                      <span className="text-xs bg-white/20 px-1 rounded">
+                        +{totalConnections - 1}
+                      </span>
+                    )}
                   </div>
                 ) : (
                   t('swap.connectWallet')
@@ -125,19 +149,36 @@ const SwapHeader: React.FC = () => {
         </div>
       </header>
 
-      {/* Wallet Connect Modal */}
-      <WalletConnectModal
-        isOpen={showConnectModal}
-        onClose={() => setShowConnectModal(false)}
-        onConnect={handleWalletConnect}
-      />
+      {/* Multi-Wallet Modal */}
+      {showMultiWalletModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                  {t('wallet.connectWallets')}
+                </h2>
+                <button
+                  onClick={() => setShowMultiWalletModal(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <MultiWalletDisplay />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Wallet Assets Modal */}
       <WalletAssetsModal
         isOpen={showAssetsModal}
         onClose={() => setShowAssetsModal(false)}
-        walletAddress={address || ''}
-        walletType={walletType || 'metamask'}
+        walletAddress={primaryAddress || ''}
+        walletType={(primaryWalletType || 'metamask') as any}
         onDisconnect={handleDisconnect}
       />
     </>
