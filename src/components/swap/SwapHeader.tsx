@@ -72,7 +72,7 @@ const SwapHeader: React.FC = () => {
                   <span className="text-white font-bold text-sm">OG</span>
                 </div>
                 <h1 className="ml-2 text-xl font-bold text-gray-900 dark:text-gray-100">
-                  Oraigold
+                  zken
                 </h1>
               </div>
 

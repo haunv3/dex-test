@@ -23,7 +23,7 @@ interface WalletState {
   walletType: 'metamask' | 'owallet' | 'keplr' | null;
   address: string | null;
   chainId: string | null;
-  provider: ethers.providers.Web3Provider | null;
+  provider: ethers.BrowserProvider | null;
   network: string | null;
   keplrAddress?: string | null;
   keplrChainId?: string | null;
@@ -61,8 +61,9 @@ export const useWallet = (autoConnect: boolean = true) => {
       // Check MetaMask (EVM)
       if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
         console.log('MetaMask detected');
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.listAccounts();
+        console.log({ accounts });
         if (accounts.length > 0) {
           console.log('MetaMask already connected:', accounts[0]);
           const network = await provider.getNetwork();
@@ -70,7 +71,7 @@ export const useWallet = (autoConnect: boolean = true) => {
           connections.push({
             type: 'evm',
             walletType: 'metamask',
-            address: accounts[0],
+            address: accounts?.[0]?.address,
             chainId: network.chainId.toString(),
             network: networkInfo?.id || 'unknown',
             provider,
@@ -84,7 +85,7 @@ export const useWallet = (autoConnect: boolean = true) => {
 
         // Check EVM connection
         try {
-          const provider = new ethers.providers.Web3Provider(window.owallet);
+          const provider = new ethers.BrowserProvider(window.owallet);
           const accounts = await provider.listAccounts();
           if (accounts.length > 0) {
             console.log('OWallet EVM already connected:', accounts[0]);
@@ -93,7 +94,7 @@ export const useWallet = (autoConnect: boolean = true) => {
             connections.push({
               type: 'evm',
               walletType: 'owallet',
-              address: accounts[0],
+              address: accounts[0]?.address,
               chainId: network.chainId.toString(),
               network: networkInfo?.id || 'unknown',
               provider,
@@ -166,20 +167,20 @@ export const useWallet = (autoConnect: boolean = true) => {
   const connectEVMWallet = useCallback(async (walletType: 'metamask' | 'owallet') => {
     console.log('Connecting to EVM wallet:', walletType);
 
-    let provider: ethers.providers.Web3Provider;
+    let provider: ethers.BrowserProvider;
     let accounts: string[];
 
     if (walletType === 'metamask') {
       if (typeof window.ethereum === 'undefined') {
         throw new Error('MetaMask is not installed');
       }
-      provider = new ethers.providers.Web3Provider(window.ethereum);
+      provider = new ethers.BrowserProvider(window.ethereum);
       accounts = await provider.send('eth_requestAccounts', []);
     } else if (walletType === 'owallet') {
       if (typeof window.owallet === 'undefined') {
         throw new Error('OWallet is not installed');
       }
-      provider = new ethers.providers.Web3Provider(window.owallet);
+      provider = new ethers.BrowserProvider(window.owallet);
       accounts = await provider.send('eth_requestAccounts', []);
     } else {
       throw new Error('Unsupported wallet type');

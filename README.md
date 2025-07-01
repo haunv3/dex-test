@@ -1,4 +1,4 @@
-# Oraigold Frontend
+# zKen Frontend
 
 A modern React application built with TypeScript, Tailwind CSS, Zustand, and React i18n.
 

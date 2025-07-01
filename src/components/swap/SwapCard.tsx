@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TokenSelector from './TokenSelector';
 import AmountInput from './AmountInput';
 import Button from '../ui/Button';
 import BalanceDisplay from '../ui/BalanceDisplay';
 import WalletInfo from './WalletInfo';
-import { BROADCAST_POLL_INTERVAL, Bridge__factory, USDT_BSC_CONTRACT, calculateTimeoutTimestamp, getCosmosGasPrice, toAmount as toAmountCommon } from '@oraichain/oraidex-common';
+import { BROADCAST_POLL_INTERVAL, calculateTimeoutTimestamp, getCosmosGasPrice, toAmount as toAmountCommon } from '@oraichain/oraidex-common';
 import { useTokens } from '../../hooks/useTokens';
 import { useWallet } from '../../hooks/useWallet';
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { Tendermint37Client } from "@cosmjs/tendermint-rpc";
+import { Comet38Client } from "@cosmjs/tendermint-rpc";
 import { coin, GasPrice } from "@cosmjs/stargate";
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
-
+import { ethers } from "ethers";
+import { ICS20I__factory } from './contract/typechain-types/factories/ICS20I__factory';
+import { ethToExa } from './contract/convertAddress';
 interface SwapCardProps {
-  fromToken: string; // This should be token.denom now
-  toToken: string; // This should be token.denom now
+  fromToken: string;
+  toToken: string;
   fromAmount: string;
   toAmount: string;
   onFromTokenChange: (tokenDenom: string) => void;
@@ -42,7 +44,16 @@ const SwapCard: React.FC<SwapCardProps> = ({
     allTokens,
   } = useTokens();
 
-  const { isConnected, connections, getEVMAddresses, getSigner } = useWallet();
+  const { isConnected } = useWallet();
+  const showToast = (type: 'success' | 'error' | 'warning' | 'info', message: string, title: string) => {
+    (window as any)?.showToast?.({
+      type,
+      message,
+      title,
+      duration: 4000,
+    });
+  }
+
 
   const listToken = allTokens.filter((token) => token.coinGeckoId && (token.chainId === 'noble-1' || token.chainId === 'exachain-1'));
 
@@ -53,29 +64,40 @@ const SwapCard: React.FC<SwapCardProps> = ({
   const handleSwap = async () => {
     try {
       if (!isConnected || !fromAmount || parseFloat(fromAmount) <= 0 || !fromToken || !toToken) {
-        alert('Please connect your wallet first');
+        showToast('error', 'Please connect your wallet first', 'Invalid input');
         return;
       }
 
-      if (fromTokenInfo?.chainId === 'noble-1' && toTokenInfo?.chainId === 'exachain-1') {
-        const tmClient = await Tendermint37Client.connect(fromTokenInfo.rpc);
+      if (!fromTokenInfo || !toTokenInfo) {
+        showToast('error', 'Please select a valid token', 'Invalid token');
+        return;
+      }
+
+      const nobleChainId = 'noble-1';
+      const exachainChainId = "exachain-1";
+      const sourcePort = "transfer";
+      const [sourceChannel, targetChannel] = ["channel-155", "channel-0"];
+      if (fromTokenInfo.chainId === nobleChainId && toTokenInfo.chainId === exachainChainId) {
+        const tmClient = await Comet38Client.connect(fromTokenInfo.rpc);
         const optionsClient = {
           broadcastPollIntervalMs: BROADCAST_POLL_INTERVAL,
           gasPrice: GasPrice.fromString(`${getCosmosGasPrice(fromTokenInfo.gasPriceStep)}${fromTokenInfo?.feeCurrencies?.[0].coinMinimalDenom}`),
         };
         // @ts-ignore
-        const wallet = window.owallet.getOfflineSignerAuto(fromTokenInfo.chainId);
+        const wallet = await window.owallet.getOfflineSignerAuto(fromTokenInfo.chainId);
         const client = await SigningCosmWasmClient.createWithSigner(tmClient, wallet, optionsClient);
         const amount = toAmountCommon(fromAmount, fromTokenInfo.decimals).toString();
-        const oraiAddress = await window.owallet?.getKey("Oraichain");
+        const evmAddress = await window.ethereum?.request({ method: "eth_requestAccounts" });
+        const exachainAddress = ethToExa(evmAddress[0]);
         const nobleAddress = await window.owallet?.getKey("noble-1");
+        const memo = '';
         const msgTransferObj = {
-          sourcePort: '',
-          receiver: oraiAddress?.bech32Address,
-          sourceChannel: '',
+          sourcePort,
+          receiver: exachainAddress,
+          sourceChannel,
           token: coin(amount, fromTokenInfo.denom),
-          sender: '',
-          memo: '',
+          sender: nobleAddress?.bech32Address,
+          memo,
           timeoutTimestamp: BigInt(calculateTimeoutTimestamp(3600))
         };
 
@@ -86,36 +108,45 @@ const SwapCard: React.FC<SwapCardProps> = ({
         };
 
         const res = await client.signAndBroadcast(nobleAddress?.bech32Address as string, [msgTransferEncodeObj], "auto");
-        console.log({ res });
+
+        if (res) {
+          showToast('success', 'Bridge successful', 'Bridge successful');
+        }
       } else {
         // Get the first EVM connection for signing
-        const evmAddresses = getEVMAddresses();
-        if (evmAddresses.length === 0) {
-          alert('No EVM wallet connected. Please connect an EVM wallet (MetaMask or OWallet)');
+        const amount = toAmountCommon(fromAmount);
+        const nobleAddress = await window.owallet?.getKey("noble-1");
+        if (!nobleAddress) {
+          showToast('error', 'Please connect your wallet first', 'Invalid input');
           return;
         }
 
-        const signer = await getSigner();
-        if (!signer) {
-          alert('Unable to get wallet signer');
-          return;
-        }
+        const receiver = nobleAddress.bech32Address;
+        const getSigner = new ethers.BrowserProvider(window.ethereum as any, 'any');
+        const signer = await getSigner.getSigner();
+        const Ics20Address = "0x0000000000000000000000000000000000000802";
+        const precompile = ICS20I__factory.connect(Ics20Address, signer);
+        const memo = '';
+        const tx = await precompile.transfer(
+          sourcePort,
+          targetChannel,
+          fromTokenInfo.denom,
+          amount,
+          signer.address,
+          receiver,
+          { revisionNumber: 1, revisionHeight: 10000000000 },
+          BigInt(calculateTimeoutTimestamp(3600)),
+          memo
+        )
 
-        const contractAddress = '0x9a0A02B296240D2620E339cCDE386Ff612f07Be5'
-        const gravityContract = Bridge__factory.connect(contractAddress as string, signer);
-        const token = {
-          contractAddress: USDT_BSC_CONTRACT,
+        const receipt = await tx.wait(1);
+        if (receipt) {
+          showToast('success', 'Swap successful', 'Swap successful');
         }
-        const to = 'channel-1/orai1hvr9d72r5um9lvt0rpkd4r75vrsqtw6yujhqs2';
-        const amountVal = toAmountCommon(fromAmount, 18);
-        const from = await signer.getAddress();
-        const result = await gravityContract.sendToCosmos(token.contractAddress, to, amountVal, { from });
-        const res = await result.wait();
-        console.log({ res });
       }
     } catch (error) {
       console.log({ error });
-      alert(`Swap failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      showToast('error', `Swap failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'Swap failed');
     }
   };
 
@@ -141,7 +172,7 @@ const SwapCard: React.FC<SwapCardProps> = ({
           </div>
         </div>
       )}
-{/*
+      {/*
       {isConnected && (
         <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <div className="flex items-center justify-between">
