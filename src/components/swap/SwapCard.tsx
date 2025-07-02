@@ -15,6 +15,7 @@ import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { ethers } from "ethers";
 import { ICS20I__factory } from './contract/typechain-types/factories/ICS20I__factory';
 import { ethToExa } from './contract/convertAddress';
+
 interface SwapCardProps {
   fromToken: string;
   toToken: string;
@@ -39,21 +40,36 @@ const SwapCard: React.FC<SwapCardProps> = ({
   const { t } = useTranslation();
   const [showFromTokenSelector, setShowFromTokenSelector] = useState(false);
   const [showToTokenSelector, setShowToTokenSelector] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     allTokens,
   } = useTokens();
 
   const { isConnected } = useWallet();
-  const showToast = (type: 'success' | 'error' | 'warning' | 'info', message: string, title: string) => {
-    (window as any)?.showToast?.({
-      type,
-      message,
-      title,
-      duration: 4000,
-    });
-  }
 
+  const showToast = (type: 'success' | 'error' | 'warning' | 'info', message: string, title: string, link?: { url: string; text: string }) => {
+    // Check if showToast function exists in window object
+    if (typeof window !== 'undefined' && (window as any)?.showToast) {
+      (window as any).showToast({
+        type,
+        message,
+        title,
+        duration: 4000,
+        link,
+      });
+    } else {
+      // Fallback to console or browser alert if showToast is not available
+      console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+
+      // You can also use browser's native alert as fallback
+      if (type === 'error') {
+        alert(`Error: ${title}\n${message}`);
+      } else if (type === 'success') {
+        alert(`Success: ${title}\n${message}`);
+      }
+    }
+  }
 
   const listToken = allTokens.filter((token) => token.coinGeckoId && (token.chainId === 'noble-1' || token.chainId === 'exachain-1'));
 
@@ -62,6 +78,9 @@ const SwapCard: React.FC<SwapCardProps> = ({
   const toTokenInfo = allTokens.find(token => token.denom === toToken);
 
   const handleSwap = async () => {
+    if (isLoading) return; // Prevent multiple clicks
+
+    setIsLoading(true);
     try {
       if (!isConnected || !fromAmount || parseFloat(fromAmount) <= 0 || !fromToken || !toToken) {
         showToast('error', 'Please connect your wallet first', 'Invalid input');
@@ -77,6 +96,7 @@ const SwapCard: React.FC<SwapCardProps> = ({
       const exachainChainId = "exachain-1";
       const sourcePort = "transfer";
       const [sourceChannel, targetChannel] = ["channel-155", "channel-0"];
+
       if (fromTokenInfo.chainId === nobleChainId && toTokenInfo.chainId === exachainChainId) {
         const tmClient = await Comet38Client.connect(fromTokenInfo.rpc);
         const optionsClient = {
@@ -108,9 +128,14 @@ const SwapCard: React.FC<SwapCardProps> = ({
         };
 
         const res = await client.signAndBroadcast(nobleAddress?.bech32Address as string, [msgTransferEncodeObj], "auto");
+        console.log({ res});
 
-        if (res) {
-          showToast('success', 'Bridge successful', 'Bridge successful');
+        if (res?.transactionHash) {
+          const explorerUrl = `https://scanium.io/noble/tx/${res.transactionHash}`;
+          showToast('success', 'transaction successful!', 'Bridge successful', {
+            url: explorerUrl,
+            text: 'View on Explorer'
+          });
         }
       } else {
         // Get the first EVM connection for signing
@@ -140,13 +165,20 @@ const SwapCard: React.FC<SwapCardProps> = ({
         )
 
         const receipt = await tx.wait(1);
+
         if (receipt) {
-          showToast('success', 'Swap successful', 'Swap successful');
+          const explorerUrl = `https://scanium.io/Exachain/account/${ethToExa(signer.address)}`;
+          showToast('success', 'Swap transaction successful!', 'Swap successful', {
+            url: explorerUrl,
+            text: 'View on Explorer'
+          });
         }
       }
     } catch (error) {
       console.log({ error });
       showToast('error', `Swap failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'Swap failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -235,14 +267,14 @@ const SwapCard: React.FC<SwapCardProps> = ({
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {t('swap.to')}
           </label>
-          <BalanceDisplay tokenId={toToken} />
+          <BalanceDisplay tokenId={fromToken} />
         </div>
 
         <div className="flex space-x-3">
           <div className="flex-1">
             <AmountInput
-              value={toAmount}
-              onChange={() => { }} // Read-only
+              value={fromAmount}
+              onChange={() => { }}
               placeholder="0.00"
               readOnly
             />
@@ -261,19 +293,25 @@ const SwapCard: React.FC<SwapCardProps> = ({
       {/* Swap Button */}
       <Button
         onClick={handleSwap}
-        disabled={!isConnected || !fromAmount || parseFloat(fromAmount) <= 0}
+        disabled={!isConnected || !fromAmount || parseFloat(fromAmount) <= 0 || isLoading}
         className="w-full"
         size="lg"
       >
-        {!isConnected
-          ? 'Connect Wallet to Swap'
-          : t('swap.swapTokens', {
+        {isLoading ? (
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span>Processing...</span>
+          </div>
+        ) : !isConnected ? (
+          'Connect Wallet to Swap'
+        ) : (
+          t('swap.swapTokens', {
             fromAmount,
             fromToken: fromTokenInfo?.name || fromToken,
             toAmount,
             toToken: toTokenInfo?.name || toToken,
           })
-        }
+        )}
       </Button>
 
       {/* Price Info */}

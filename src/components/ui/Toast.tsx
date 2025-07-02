@@ -11,6 +11,10 @@ export interface ToastProps {
   duration?: number;
   onClose: (id: string) => void;
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center';
+  link?: {
+    url: string;
+    text: string;
+  };
 }
 
 const Toast: React.FC<ToastProps> = ({
@@ -21,6 +25,7 @@ const Toast: React.FC<ToastProps> = ({
   duration = 5000,
   onClose,
   position = 'top-right',
+  link,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -45,6 +50,13 @@ const Toast: React.FC<ToastProps> = ({
     setTimeout(() => {
       onClose(id);
     }, 300);
+  };
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (link?.url) {
+      window.open(link.url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const typeConfig = {
@@ -121,6 +133,17 @@ const Toast: React.FC<ToastProps> = ({
             <p className="text-sm font-medium mb-1">{title}</p>
           )}
           <p className="text-sm">{message}</p>
+          {link && (
+            <button
+              onClick={handleLinkClick}
+              className="mt-2 text-sm font-medium underline hover:no-underline transition-all duration-200 flex items-center space-x-1"
+            >
+              <span>{link.text}</span>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </button>
+          )}
         </div>
         <button
           onClick={handleClose}

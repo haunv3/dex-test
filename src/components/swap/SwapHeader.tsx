@@ -69,7 +69,7 @@ const SwapHeader: React.FC = () => {
               {/* Logo */}
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">OG</span>
+                  <span className="text-white font-bold text-sm">zk</span>
                 </div>
                 <h1 className="ml-2 text-xl font-bold text-gray-900 dark:text-gray-100">
                   zken
