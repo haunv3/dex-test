@@ -53,8 +53,6 @@ const MultiWalletDisplay: React.FC<MultiWalletDisplayProps> = ({ className }) =>
     switch (network.toLowerCase()) {
       case 'noble-1':
         return '🔷';
-      case 'exachain-1':
-        return '🟢';
       default:
         return '⭕';
     }

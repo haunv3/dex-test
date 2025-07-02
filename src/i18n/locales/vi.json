@@ -6,7 +6,8 @@
   "nav": {
     "home": "Trang chủ",
     "components": "Components",
-    "multiWallet": "Đa Ví",
+    "multiWallet": "Multi-Wallet",
+    "balanceDemo": "Demo Balance",
     "notifications": "Thông báo",
     "swap": "Swap"
   },
@@ -15,17 +16,17 @@
     "portfolio": "Danh mục"
   },
   "swap": {
-    "title": "Swap",
+    "title": "Bridge",
     "from": "Từ",
     "to": "Đến",
     "balance": "Số dư",
     "enterAmount": "Nhập số lượng",
-    "swapTokens": "Swap {{fromAmount}} {{fromToken}} lấy {{toAmount}} {{toToken}}",
+    "swapTokens": "Bridge {{fromAmount}} {{fromToken}} cho {{toAmount}} {{toToken}}",
     "price": "Giá",
-    "slippageTolerance": "Dung sai trượt giá",
+    "slippageTolerance": "Độ trượt giá",
     "connectWallet": "Kết nối ví",
-    "searchTokens": "Tìm kiếm token...",
-    "swap": "Swap",
+    "searchTokens": "Tìm kiếm tokens...",
+    "swap": "Bridge",
     "liquidity": "Thanh khoản"
   },
   "wallet": {
@@ -182,5 +183,15 @@
     "infoToast": "Info Toast",
     "clickToOpenLoginModal": "Click vào nút bên dưới để mở modal đăng nhập",
     "openLoginModal": "Mở Modal Đăng Nhập"
+  },
+  "balance": {
+    "title": "Số dư ví",
+    "refresh": "Làm mới số dư",
+    "showAll": "Hiển thị tất cả",
+    "showLess": "Hiển thị ít hơn",
+    "noTokens": "Không tìm thấy tokens được hỗ trợ",
+    "connectWallet": "Kết nối ví để xem số dư",
+    "totalTokens": "Tổng tokens",
+    "lastUpdated": "Cập nhật lần cuối"
   }
 }

@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Components from './pages/Components';
 import Swap from './pages/Swap';
 import MultiWalletDemo from './components/MultiWalletDemo';
+import BalanceDemo from './components/BalanceDemo';
 import './i18n';
 import { initializeOraidexCommon } from './initCommon';
 import { useTokens } from './hooks/useTokens';
@@ -28,6 +29,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="components" element={<Components />} />
             <Route path="multi-wallet" element={<MultiWalletDemo />} />
+            <Route path="balance-demo" element={<BalanceDemo />} />
           </Route>
           <Route path="/swap" element={<Swap />} />
         </Routes>

@@ -36,7 +36,7 @@ export const initializeOraidexCommon = async (
         prefix: "usdx",
         evmDenoms: ["usdx"],
         bridgeTo: ["noble-1"],
-        chainId: "exachain-1",
+        chainId: 20250626,
         coinType: 60,
         rpc: "https://evm.zken.com",
         decimals: 18,

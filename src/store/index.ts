@@ -46,7 +46,13 @@ export const useAppStore = create<AppStore>()(
         const newTheme: Theme = {
           mode: currentTheme.mode === 'light' ? 'dark' : 'light'
         };
-        get().setTheme(newTheme);
+        set({ theme: newTheme });
+        // Apply theme to document
+        if (newTheme.mode === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
       },
 
       logout: () => set({ user: null }),
@@ -64,3 +70,6 @@ export const useAppStore = create<AppStore>()(
 
 // Export token store
 export { useTokenStore } from './tokenStore';
+
+// Export balance store
+export { useBalanceStore } from './balanceStore';

@@ -13,6 +13,7 @@ const Navigation: React.FC = () => {
     { path: '/', label: t('nav.home'), icon: '🏠' },
     { path: '/components', label: t('nav.components'), icon: '🧩' },
     { path: '/multi-wallet', label: t('nav.multiWallet'), icon: '🔗' },
+    { path: '/balance-demo', label: t('nav.balanceDemo'), icon: '💰' },
   ];
 
   const languages = [

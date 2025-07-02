@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useTokenStore } from '../store/tokenStore';
 
 export const useTokens = () => {
@@ -11,6 +12,18 @@ export const useTokens = () => {
     removeToken,
     clearTokens,
   } = useTokenStore();
+
+  // Memoize allTokens to prevent unnecessary re-renders
+  const allTokens = useMemo(() =>
+    [...allOraichainTokens, ...allOtherChainTokens, ...addedTokens],
+    [allOraichainTokens, allOtherChainTokens, addedTokens]
+  );
+
+  // Memoize verifiedTokens to prevent unnecessary re-renders
+  const verifiedTokens = useMemo(() =>
+    allOraichainTokens.filter(token => token.isVerified),
+    [allOraichainTokens]
+  );
 
   return {
     // State
@@ -26,7 +39,7 @@ export const useTokens = () => {
     clearTokens,
 
     // Computed values
-    allTokens: [...allOraichainTokens, ...allOtherChainTokens, ...addedTokens],
-    verifiedTokens: allOraichainTokens.filter(token => token.isVerified),
+    allTokens,
+    verifiedTokens,
   };
 };

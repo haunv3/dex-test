@@ -7,12 +7,7 @@ interface AppProviderProps {
 }
 
 const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  const { theme, setTheme, language } = useAppStore();
-
-  // Initialize theme on app load
-  useEffect(() => {
-    setTheme(theme);
-  }, [setTheme, theme]);
+  const { theme, language } = useAppStore();
 
   // Sync language from store with i18next
   useEffect(() => {

@@ -7,6 +7,7 @@
     "home": "Home",
     "components": "Components",
     "multiWallet": "Multi-Wallet",
+    "balanceDemo": "Balance Demo",
     "notifications": "Notifications",
     "swap": "Swap"
   },
@@ -27,6 +28,16 @@
     "searchTokens": "Search tokens...",
     "swap": "Bridge",
     "liquidity": "Liquidity"
+  },
+  "balance": {
+    "title": "Wallet Balances",
+    "refresh": "Refresh balances",
+    "showAll": "Show All",
+    "showLess": "Show Less",
+    "noTokens": "No supported tokens found",
+    "connectWallet": "Connect your wallet to see balances",
+    "totalTokens": "Total Tokens",
+    "lastUpdated": "Last updated"
   },
   "wallet": {
     "connectWallet": "Connect Wallet",

@@ -4,6 +4,7 @@ import TokenSelector from './TokenSelector';
 import AmountInput from './AmountInput';
 import Button from '../ui/Button';
 import WalletInfo from './WalletInfo';
+import BalanceDisplay from './BalanceDisplay';
 import { BROADCAST_POLL_INTERVAL, calculateTimeoutTimestamp, getCosmosGasPrice, toAmount as toAmountCommon } from '@oraichain/oraidex-common';
 import { useTokens } from '../../hooks/useTokens';
 import { useWallet } from '../../hooks/useWallet';
@@ -70,7 +71,7 @@ const SwapCard: React.FC<SwapCardProps> = ({
     }
   }
 
-  const listToken = allTokens.filter((token) => token.coinGeckoId && (token.chainId === 'noble-1' || token.chainId === 'exachain-1'));
+  const listToken = allTokens.filter((token) => token.coinGeckoId && (token.chainId === 'noble-1' || token.chainId === 20250626));
 
   // Get token info for display
   const fromTokenInfo = allTokens.find(token => token.denom === fromToken);
@@ -92,7 +93,7 @@ const SwapCard: React.FC<SwapCardProps> = ({
       }
 
       const nobleChainId = 'noble-1';
-      const exachainChainId = "exachain-1";
+      const exachainChainId = 20250626;
       const sourcePort = "transfer";
       const [sourceChannel, targetChannel] = ["channel-155", "channel-0"];
 
@@ -190,7 +191,10 @@ const SwapCard: React.FC<SwapCardProps> = ({
       </div>
 
       {/* Wallet Info */}
-      <WalletInfo />
+      {/* <WalletInfo /> */}
+
+      {/* Balance Display */}
+      <BalanceDisplay className="mb-6" />
 
       {/* Wallet Connection Status */}
       {!isConnected && (
@@ -305,7 +309,7 @@ const SwapCard: React.FC<SwapCardProps> = ({
           t('swap.swapTokens', {
             fromAmount,
             fromToken: fromTokenInfo?.name || fromToken,
-            toAmount,
+              toAmount: fromAmount,
             toToken: toTokenInfo?.name || toToken,
           })
         )}
