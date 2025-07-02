@@ -51,20 +51,10 @@ const MultiWalletDisplay: React.FC<MultiWalletDisplayProps> = ({ className }) =>
 
   const getChainIcon = (network: string) => {
     switch (network.toLowerCase()) {
-      case 'ethereum':
-      case 'mainnet':
+      case 'noble-1':
         return '🔷';
-      case 'bsc':
-      case 'binance':
-        return '🟡';
-      case 'polygon':
-        return '🟣';
-      case 'oraichain':
-        return '🔵';
-      case 'cosmoshub':
-        return '🔶';
-      case 'osmosis':
-        return '🟠';
+      case 'exachain-1':
+        return '🟢';
       default:
         return '⭕';
     }

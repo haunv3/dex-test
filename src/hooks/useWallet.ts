@@ -352,21 +352,12 @@ export const useWallet = (autoConnect: boolean = true) => {
     }
   }, []);
 
-  const getSigner = useCallback(async () => {
+  const getSigner = useCallback(() => {
     const evmConnection = walletState.connections.find(conn => conn.type === 'evm');
     if (!evmConnection?.provider) {
       throw new Error('No EVM wallet connected');
     }
     return evmConnection.provider.getSigner();
-  }, [walletState.connections]);
-
-  const getBalance = useCallback(async () => {
-    const evmConnection = walletState.connections.find(conn => conn.type === 'evm');
-    if (!evmConnection?.provider) {
-      throw new Error('No EVM wallet connected');
-    }
-    const signer = evmConnection.provider.getSigner();
-    return await signer.getBalance();
   }, [walletState.connections]);
 
   const getCurrentAddress = useCallback(() => {
@@ -417,7 +408,6 @@ export const useWallet = (autoConnect: boolean = true) => {
     switchNetwork,
     checkWalletConnection,
     getSigner,
-    getBalance,
     getCurrentAddress,
     getCurrentChainId,
     getEVMAddresses,

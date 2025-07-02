@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import TokenSelector from './TokenSelector';
 import AmountInput from './AmountInput';
 import Button from '../ui/Button';
-import BalanceDisplay from '../ui/BalanceDisplay';
 import WalletInfo from './WalletInfo';
 import { BROADCAST_POLL_INTERVAL, calculateTimeoutTimestamp, getCosmosGasPrice, toAmount as toAmountCommon } from '@oraichain/oraidex-common';
 import { useTokens } from '../../hooks/useTokens';
@@ -227,7 +226,6 @@ const SwapCard: React.FC<SwapCardProps> = ({
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {t('swap.from')}
           </label>
-          <BalanceDisplay tokenId={fromToken} />
         </div>
 
         <div className="flex space-x-3">
@@ -267,7 +265,6 @@ const SwapCard: React.FC<SwapCardProps> = ({
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {t('swap.to')}
           </label>
-          <BalanceDisplay tokenId={fromToken} />
         </div>
 
         <div className="flex space-x-3">
